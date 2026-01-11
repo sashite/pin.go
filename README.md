@@ -15,7 +15,7 @@ This library implements the [PIN Specification v1.0.0](https://sashite.dev/specs
 ## Installation
 
 ```bash
-go get [github.com/sashite/pin.go](https://github.com/sashite/pin.go)
+go get github.com/sashite/pin.go
 
 ```
 
@@ -30,7 +30,7 @@ package main
 
 import (
 	"fmt"
-	"[github.com/sashite/pin.go](https://github.com/sashite/pin.go)"
+	"github.com/sashite/pin.go"
 )
 
 func main() {
