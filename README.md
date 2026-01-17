@@ -4,132 +4,165 @@
 [![Go Report Card](https://goreportcard.com/badge/github.com/sashite/pin.go)](https://goreportcard.com/report/github.com/sashite/pin.go)
 [![License](https://img.shields.io/github/license/sashite/pin.go)](https://github.com/sashite/pin.go/blob/main/LICENSE)
 
-> Idiomatic Go implementation of the **PIN** (Piece Identifier Notation) specification.
+> **PIN** (Piece Identifier Notation) implementation for Go.
 
-## What is PIN?
+## Overview
 
-PIN (Piece Identifier Notation) is a compact, ASCII-based format for representing pieces in abstract strategy board games. It translates piece attributes from the [Game Protocol](https://sashite.dev/game-protocol/) into a portable notation system.
-
-This library implements the [PIN Specification v1.0.0](https://sashite.dev/specs/pin/1.0.0/). It is designed to be performant (zero-allocation manipulations) and safe (immutable value semantics).
+This library implements the [PIN Specification v1.0.0](https://sashite.dev/specs/pin/1.0.0/).
 
 ## Installation
 
 ```bash
-go get github.com/sashite/pin.go
-
+go get github.com/sashite/pin.go/v2
 ```
 
 ## Usage
 
-### 1. Parsing (String to Pin)
+### Parsing (String → Identifier)
 
-Use `Parse` to convert a PIN string into a `Pin` structure.
+Convert a PIN string into an `Identifier` struct.
 
 ```go
 package main
 
 import (
 	"fmt"
-	"github.com/sashite/pin.go"
+	"github.com/sashite/pin.go/v2"
 )
 
 func main() {
-	// Standard parsing
-	p, err := pin.Parse("+K^")
+	// Standard parsing (returns error)
+	id, err := pin.Parse("K")
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(p.String()) // Output: "+K^"
+	fmt.Println(id.Type())     // K
+	fmt.Println(id.Side())     // First
+	fmt.Println(id.State())    // Normal
+	fmt.Println(id.Terminal()) // false
 
-	// Strict parsing (panics on error) - Useful for constants
-	k := pin.MustParse("k")
-	fmt.Println(k.Side) // Output: Second (1)
+	// With state modifier
+	id, _ = pin.Parse("+R")
+	fmt.Println(id.State()) // Enhanced
+
+	// With terminal marker
+	id, _ = pin.Parse("K^")
+	fmt.Println(id.Terminal()) // true
+
+	// Panic on error (for constants or trusted input)
+	k := pin.MustParse("+K^")
+	fmt.Println(k.String()) // +K^
 }
-
 ```
 
-### 2. Manual Creation
+### Formatting (Identifier → String)
 
-You can create `Pin` values using struct literals. This is the most idiomatic way to initialize known values.
+Convert an `Identifier` back to a PIN string.
 
 ```go
-// Via struct literal (explicit and clear)
-p := pin.Pin{
-	Abbr:     'n',        // Note: strictly a rune (int32), matches spec <abbr>
-	Side:     pin.Second,
-	State:    pin.Enhanced,
-	Terminal: true,
-}
-fmt.Println(p.String()) // Output: "+n^"
+// From Identifier
+id := pin.NewIdentifier('K', pin.First)
+fmt.Println(id.String()) // "K"
 
+// With attributes
+id = pin.NewIdentifierWithOptions('R', pin.Second, pin.Enhanced, false)
+fmt.Println(id.String()) // "+r"
+
+id = pin.NewIdentifierWithOptions('K', pin.First, pin.Normal, true)
+fmt.Println(id.String()) // "K^"
 ```
 
-### 3. Immutability and Manipulation
-
-`Pin` objects are **immutable values**. Transformation methods always return a *new* copy, leaving the original unmodified.
-
-The API provides "Fluent Setters" (`WithX`) for absolute control, and "Action Helpers" (`Flip`, `Enhance`) for relative changes.
+### Validation
 
 ```go
-origin := pin.MustParse("P") // Normal white pawn "P"
+// Boolean check
+if pin.IsValid("K") {
+	// valid identifier
+}
 
-// Fluent setters (Consistent with Sashité Ruby API)
-promoted := origin.WithState(pin.Enhanced).WithTerminal(true)
-
-// Action helpers
-blackPawn := origin.Flip()
-
-fmt.Println(origin.String())    // "P"   (Original remains unchanged)
-fmt.Println(promoted.String())  // "+P^" (New value)
-fmt.Println(blackPawn.String()) // "p"
-
+// Detailed error
+if err := pin.Validate("+K^"); err != nil {
+	fmt.Println(err)
+}
 ```
 
-### 4. High Performance (Zero-Allocation)
-
-For game engines requiring high-throughput serialization (e.g., generating FEN strings or logging moves), use `AppendTo` instead of `String`. This avoids allocating new string objects by appending directly to a byte buffer.
+### Accessing Identifier Data
 
 ```go
-// Pre-allocate a buffer
-buf := make([]byte, 0, 16)
+id := pin.MustParse("+K^")
 
-// In your game loop:
-pieces := []pin.Pin{
-    {Abbr: 'R', Side: pin.First},
-    {Abbr: 'k', Side: pin.Second, Terminal: true},
-}
+// Get attributes
+fmt.Println(id.Type())     // K (rune)
+fmt.Println(id.Side())     // First
+fmt.Println(id.State())    // Enhanced
+fmt.Println(id.Terminal()) // true
 
-for _, p := range pieces {
-    // Append directly to buffer (no allocation)
-    buf = p.AppendTo(buf)
-    buf = append(buf, ' ') // Separator
-}
-
-fmt.Printf("%s", buf) // Output: "R k^ "
-
+// Get string components
+fmt.Println(id.Letter()) // "K"
+fmt.Println(id.Prefix()) // "+"
+fmt.Println(id.Suffix()) // "^"
 ```
 
-### 5. Inspection
+### Transformations
 
-The `Pin` struct fields are public, allowing for direct, high-performance access.
+All transformations return new immutable values.
 
 ```go
-p := pin.MustParse("+r^")
+id := pin.MustParse("K")
 
-// Check attributes directly
-if p.Terminal {
-	fmt.Println("Game ends if this piece is captured.")
-}
+// State transformations
+fmt.Println(id.Enhance().String())   // "+K"
+fmt.Println(id.Diminish().String())  // "-K"
+fmt.Println(id.Normalize().String()) // "K"
 
-if p.State == pin.Enhanced {
-	fmt.Println("This piece is in an enhanced state.")
-}
+// Side transformation
+fmt.Println(id.Flip().String()) // "k"
 
-// Abbr is a rune, making Unicode comparisons easy
-if p.Abbr == 'r' {
-	fmt.Println("It is a rook/chariot.")
-}
+// Terminal transformations
+fmt.Println(id.MarkTerminal().String())   // "K^"
+fmt.Println(id.UnmarkTerminal().String()) // "K"
 
+// Attribute changes
+fmt.Println(id.WithType('Q').String())           // "Q"
+fmt.Println(id.WithSide(pin.Second).String())    // "k"
+fmt.Println(id.WithState(pin.Enhanced).String()) // "+K"
+fmt.Println(id.WithTerminal(true).String())      // "K^"
+```
+
+### Queries
+
+```go
+id := pin.MustParse("+K^")
+
+// State queries
+fmt.Println(id.IsNormal())     // false
+fmt.Println(id.IsEnhanced())   // true
+fmt.Println(id.IsDiminished()) // false
+
+// Side queries
+fmt.Println(id.IsFirstPlayer())  // true
+fmt.Println(id.IsSecondPlayer()) // false
+
+// Terminal query
+fmt.Println(id.Terminal()) // true
+
+// Comparison queries
+other := pin.MustParse("k")
+fmt.Println(id.SameType(other))     // true
+fmt.Println(id.SameSide(other))     // false
+fmt.Println(id.SameState(other))    // false
+fmt.Println(id.SameTerminal(other)) // false
+```
+
+### Zero-Allocation Serialization
+
+For high-performance scenarios, use `AppendTo` to avoid allocations.
+
+```go
+buf := make([]byte, 0, 32)
+id := pin.MustParse("+K^")
+buf = id.AppendTo(buf)
+fmt.Printf("%s\n", buf) // "+K^"
 ```
 
 ## API Reference
@@ -137,50 +170,151 @@ if p.Abbr == 'r' {
 ### Types
 
 ```go
-type Pin struct {
-	Abbr     rune  // ASCII character (e.g., 'K', 'p')
-	Side     Side  // First (0) or Second (1)
-	State    State // Normal (0), Enhanced (1), Diminished (2)
-	Terminal bool  // true or false
+// Identifier represents a parsed PIN identifier with all attributes.
+// Zero value is not valid; use NewIdentifier or Parse to create.
+type Identifier struct {
+	// contains unexported fields
 }
 
+// Side represents the player side.
+type Side uint8
+
+// State represents the piece state.
+type State uint8
+
+// NewIdentifier creates an Identifier with default state (Normal) and terminal (false).
+func NewIdentifier(typ rune, side Side) Identifier
+
+// NewIdentifierWithOptions creates an Identifier with all attributes specified.
+func NewIdentifierWithOptions(typ rune, side Side, state State, terminal bool) Identifier
+
+// Type returns the piece type as uppercase rune (A-Z).
+func (id Identifier) Type() rune
+
+// Side returns the player side.
+func (id Identifier) Side() Side
+
+// State returns the piece state.
+func (id Identifier) State() State
+
+// Terminal returns the terminal status.
+func (id Identifier) Terminal() bool
+
+// String returns the PIN string representation.
+func (id Identifier) String() string
+
+// AppendTo appends the PIN string to dst without allocation.
+func (id Identifier) AppendTo(dst []byte) []byte
 ```
 
 ### Constants
 
-* **Side**: `pin.First` (Uppercase), `pin.Second` (Lowercase).
-* **State**: `pin.Normal`, `pin.Enhanced` (`+`), `pin.Diminished` (`-`).
+```go
+const (
+	First  Side = iota // Uppercase letter
+	Second             // Lowercase letter
+)
 
-### Methods
+const (
+	Normal     State = iota // No prefix
+	Enhanced                // Prefix '+'
+	Diminished              // Prefix '-'
+)
+
+const MaxStringLength = 3
+```
+
+### Parsing
 
 ```go
-// Parsing
-func Parse(s string) (Pin, error)
-func MustParse(s string) Pin
+// Parse converts a PIN string to an Identifier.
+// Returns an error if the string is not valid.
+func Parse(s string) (Identifier, error)
 
-// Stringer Interface
-func (p Pin) String() string
-
-// Zero-Allocation Serialization
-func (p Pin) AppendTo(dst []byte) []byte
-
-// Transformations (Return new Pin)
-func (p Pin) WithSide(s Side) Pin
-func (p Pin) WithState(s State) Pin
-func (p Pin) WithTerminal(t bool) Pin
-
-// Convenience Helpers
-func (p Pin) Flip() Pin           // Toggles Side
-func (p Pin) Enhance() Pin        // Normal -> Enhanced
-func (p Pin) Diminish() Pin       // Normal -> Diminished
-
+// MustParse is like Parse but panics on error.
+// Use for constants or trusted input.
+func MustParse(s string) Identifier
 ```
+
+### Validation
+
+```go
+// Validate checks if s is a valid PIN identifier.
+// Returns nil if valid, or a descriptive error.
+func Validate(s string) error
+
+// IsValid reports whether s is a valid PIN identifier.
+func IsValid(s string) bool
+```
+
+### Transformations
+
+```go
+// State transformations
+func (id Identifier) Enhance() Identifier
+func (id Identifier) Diminish() Identifier
+func (id Identifier) Normalize() Identifier
+
+// Side transformation
+func (id Identifier) Flip() Identifier
+
+// Terminal transformations
+func (id Identifier) MarkTerminal() Identifier
+func (id Identifier) UnmarkTerminal() Identifier
+
+// Attribute changes
+func (id Identifier) WithType(typ rune) Identifier
+func (id Identifier) WithSide(side Side) Identifier
+func (id Identifier) WithState(state State) Identifier
+func (id Identifier) WithTerminal(terminal bool) Identifier
+```
+
+### Queries
+
+```go
+// State queries
+func (id Identifier) IsNormal() bool
+func (id Identifier) IsEnhanced() bool
+func (id Identifier) IsDiminished() bool
+
+// Side queries
+func (id Identifier) IsFirstPlayer() bool
+func (id Identifier) IsSecondPlayer() bool
+
+// Comparison queries
+func (id Identifier) SameType(other Identifier) bool
+func (id Identifier) SameSide(other Identifier) bool
+func (id Identifier) SameState(other Identifier) bool
+func (id Identifier) SameTerminal(other Identifier) bool
+```
+
+### Errors
+
+```go
+var (
+	ErrEmptyInput           = errors.New("pin: empty input")
+	ErrInputTooLong         = errors.New("pin: input exceeds 3 characters")
+	ErrMustContainOneLetter = errors.New("pin: must contain exactly one letter")
+	ErrInvalidStateModifier = errors.New("pin: invalid state modifier")
+	ErrInvalidTerminalMarker = errors.New("pin: invalid terminal marker")
+)
+```
+
+## Design Principles
+
+- **Bounded types**: Fixed-size struct, no heap allocation in hot path
+- **Value semantics**: `Identifier` is a value type, safe to copy
+- **Sentinel errors**: Standard Go error handling with `errors.Is()`
+- **strconv-style API**: Familiar `Parse`, `MustParse`, `String()` patterns
+- **Zero-allocation option**: `AppendTo` for high-performance serialization
+- **Security-hardened**: Byte-level parsing, rejects Unicode lookalikes
+- **No dependencies**: Pure Go standard library only
 
 ## Related Specifications
 
-* [Game Protocol](https://sashite.dev/game-protocol/) — Conceptual foundation
-* [PIN Specification](https://sashite.dev/specs/pin/1.0.0/) — Official specification
-* [PIN Examples](https://sashite.dev/specs/pin/1.0.0/examples/) — Game-specific mappings
+- [Game Protocol](https://sashite.dev/game-protocol/) — Conceptual foundation
+- [PIN Specification](https://sashite.dev/specs/pin/1.0.0/) — Official specification
+- [PIN Examples](https://sashite.dev/specs/pin/1.0.0/examples/) — Usage examples
 
 ## License
 
