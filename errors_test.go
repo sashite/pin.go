@@ -71,7 +71,7 @@ func TestParsingErrorsAreDistinct(t *testing.T) {
 func TestValidationErrorsExist(t *testing.T) {
 	// Verify all validation errors are non-nil
 	validationErrors := []error{
-		ErrInvalidType,
+		ErrInvalidAbbr,
 		ErrInvalidSide,
 		ErrInvalidState,
 	}
@@ -88,7 +88,7 @@ func TestValidationErrorMessages(t *testing.T) {
 		err  error
 		want string
 	}{
-		{ErrInvalidType, "pin: invalid type (must be A-Z)"},
+		{ErrInvalidAbbr, "pin: invalid abbr (must be A-Z)"},
 		{ErrInvalidSide, "pin: invalid side"},
 		{ErrInvalidState, "pin: invalid state"},
 	}
@@ -103,7 +103,7 @@ func TestValidationErrorMessages(t *testing.T) {
 
 func TestValidationErrorsAreDistinct(t *testing.T) {
 	validationErrors := []error{
-		ErrInvalidType,
+		ErrInvalidAbbr,
 		ErrInvalidSide,
 		ErrInvalidState,
 	}
@@ -129,7 +129,7 @@ func TestErrorsIs(t *testing.T) {
 		ErrMustContainOneLetter,
 		ErrInvalidStateModifier,
 		ErrInvalidTerminalMarker,
-		ErrInvalidType,
+		ErrInvalidAbbr,
 		ErrInvalidSide,
 		ErrInvalidState,
 	}
@@ -152,7 +152,7 @@ func TestErrorsHavePinPrefix(t *testing.T) {
 		ErrMustContainOneLetter,
 		ErrInvalidStateModifier,
 		ErrInvalidTerminalMarker,
-		ErrInvalidType,
+		ErrInvalidAbbr,
 		ErrInvalidSide,
 		ErrInvalidState,
 	}

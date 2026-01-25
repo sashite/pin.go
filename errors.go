@@ -22,8 +22,8 @@ var (
 
 // Validation errors (for constructors).
 var (
-	// ErrInvalidType is returned when the piece type is not A-Z.
-	ErrInvalidType = errors.New("pin: invalid type (must be A-Z)")
+	// ErrInvalidAbbr is returned when the piece name abbreviation is not A-Z.
+	ErrInvalidAbbr = errors.New("pin: invalid abbr (must be A-Z)")
 
 	// ErrInvalidSide is returned when the side is not First or Second.
 	ErrInvalidSide = errors.New("pin: invalid side")

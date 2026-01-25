@@ -9,8 +9,8 @@ import "testing"
 func TestNewIdentifier(t *testing.T) {
 	id := NewIdentifier('K', First)
 
-	if id.Type() != 'K' {
-		t.Errorf("Type() = %q, want 'K'", id.Type())
+	if id.Abbr() != 'K' {
+		t.Errorf("Abbr() = %q, want 'K'", id.Abbr())
 	}
 	if id.Side() != First {
 		t.Errorf("Side() = %v, want First", id.Side())
@@ -18,16 +18,16 @@ func TestNewIdentifier(t *testing.T) {
 	if id.State() != Normal {
 		t.Errorf("State() = %v, want Normal", id.State())
 	}
-	if id.Terminal() != false {
-		t.Errorf("Terminal() = %v, want false", id.Terminal())
+	if id.IsTerminal() != false {
+		t.Errorf("IsTerminal() = %v, want false", id.IsTerminal())
 	}
 }
 
 func TestNewIdentifierWithOptions(t *testing.T) {
 	id := NewIdentifierWithOptions('R', Second, Enhanced, true)
 
-	if id.Type() != 'R' {
-		t.Errorf("Type() = %q, want 'R'", id.Type())
+	if id.Abbr() != 'R' {
+		t.Errorf("Abbr() = %q, want 'R'", id.Abbr())
 	}
 	if id.Side() != Second {
 		t.Errorf("Side() = %v, want Second", id.Side())
@@ -35,32 +35,32 @@ func TestNewIdentifierWithOptions(t *testing.T) {
 	if id.State() != Enhanced {
 		t.Errorf("State() = %v, want Enhanced", id.State())
 	}
-	if id.Terminal() != true {
-		t.Errorf("Terminal() = %v, want true", id.Terminal())
+	if id.IsTerminal() != true {
+		t.Errorf("IsTerminal() = %v, want true", id.IsTerminal())
 	}
 }
 
 func TestNewIdentifierNormalizesLowercase(t *testing.T) {
 	id := NewIdentifier('k', First)
 
-	if id.Type() != 'K' {
-		t.Errorf("Type() = %q, want 'K' (normalized from 'k')", id.Type())
+	if id.Abbr() != 'K' {
+		t.Errorf("Abbr() = %q, want 'K' (normalized from 'k')", id.Abbr())
 	}
 }
 
-func TestNewIdentifierAllTypes(t *testing.T) {
+func TestNewIdentifierAllAbbrs(t *testing.T) {
 	for r := 'A'; r <= 'Z'; r++ {
 		id := NewIdentifier(r, First)
-		if id.Type() != r {
-			t.Errorf("NewIdentifier(%q, First).Type() = %q, want %q", r, id.Type(), r)
+		if id.Abbr() != r {
+			t.Errorf("NewIdentifier(%q, First).Abbr() = %q, want %q", r, id.Abbr(), r)
 		}
 	}
 }
 
-func TestNewIdentifierPanicsOnInvalidType(t *testing.T) {
+func TestNewIdentifierPanicsOnInvalidAbbr(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
-			t.Error("expected panic for invalid type")
+			t.Error("expected panic for invalid abbr")
 		}
 	}()
 
@@ -312,36 +312,36 @@ func TestIdentifierFlipString(t *testing.T) {
 // Terminal Transformation Tests
 // ============================================================================
 
-func TestIdentifierMarkTerminal(t *testing.T) {
+func TestIdentifierTerminal(t *testing.T) {
 	id := NewIdentifier('K', First)
-	marked := id.MarkTerminal()
+	marked := id.Terminal()
 
 	// Original unchanged
-	if id.Terminal() != false {
-		t.Errorf("original Terminal() = %v, want false", id.Terminal())
+	if id.IsTerminal() != false {
+		t.Errorf("original IsTerminal() = %v, want false", id.IsTerminal())
 	}
 
 	// New is terminal
-	if marked.Terminal() != true {
-		t.Errorf("marked Terminal() = %v, want true", marked.Terminal())
+	if marked.IsTerminal() != true {
+		t.Errorf("marked IsTerminal() = %v, want true", marked.IsTerminal())
 	}
 	if marked.String() != "K^" {
 		t.Errorf("marked String() = %q, want \"K^\"", marked.String())
 	}
 }
 
-func TestIdentifierUnmarkTerminal(t *testing.T) {
+func TestIdentifierNonTerminal(t *testing.T) {
 	id := NewIdentifierWithOptions('K', First, Normal, true)
-	unmarked := id.UnmarkTerminal()
+	unmarked := id.NonTerminal()
 
 	// Original unchanged
-	if id.Terminal() != true {
-		t.Errorf("original Terminal() = %v, want true", id.Terminal())
+	if id.IsTerminal() != true {
+		t.Errorf("original IsTerminal() = %v, want true", id.IsTerminal())
 	}
 
 	// New is not terminal
-	if unmarked.Terminal() != false {
-		t.Errorf("unmarked Terminal() = %v, want false", unmarked.Terminal())
+	if unmarked.IsTerminal() != false {
+		t.Errorf("unmarked IsTerminal() = %v, want false", unmarked.IsTerminal())
 	}
 	if unmarked.String() != "K" {
 		t.Errorf("unmarked String() = %q, want \"K\"", unmarked.String())
@@ -352,39 +352,39 @@ func TestIdentifierUnmarkTerminal(t *testing.T) {
 // WithX Transformation Tests
 // ============================================================================
 
-func TestIdentifierWithType(t *testing.T) {
+func TestIdentifierWithAbbr(t *testing.T) {
 	id := NewIdentifier('K', First)
-	changed := id.WithType('Q')
+	changed := id.WithAbbr('Q')
 
 	// Original unchanged
-	if id.Type() != 'K' {
-		t.Errorf("original Type() = %q, want 'K'", id.Type())
+	if id.Abbr() != 'K' {
+		t.Errorf("original Abbr() = %q, want 'K'", id.Abbr())
 	}
 
-	// New has new type
-	if changed.Type() != 'Q' {
-		t.Errorf("changed Type() = %q, want 'Q'", changed.Type())
+	// New has new abbr
+	if changed.Abbr() != 'Q' {
+		t.Errorf("changed Abbr() = %q, want 'Q'", changed.Abbr())
 	}
 }
 
-func TestIdentifierWithTypeNormalizesLowercase(t *testing.T) {
+func TestIdentifierWithAbbrNormalizesLowercase(t *testing.T) {
 	id := NewIdentifier('K', First)
-	changed := id.WithType('q')
+	changed := id.WithAbbr('q')
 
-	if changed.Type() != 'Q' {
-		t.Errorf("WithType('q').Type() = %q, want 'Q'", changed.Type())
+	if changed.Abbr() != 'Q' {
+		t.Errorf("WithAbbr('q').Abbr() = %q, want 'Q'", changed.Abbr())
 	}
 }
 
-func TestIdentifierWithTypePanicsOnInvalid(t *testing.T) {
+func TestIdentifierWithAbbrPanicsOnInvalid(t *testing.T) {
 	defer func() {
 		if r := recover(); r == nil {
-			t.Error("expected panic for invalid type")
+			t.Error("expected panic for invalid abbr")
 		}
 	}()
 
 	id := NewIdentifier('K', First)
-	id.WithType('1')
+	id.WithAbbr('1')
 }
 
 func TestIdentifierWithSide(t *testing.T) {
@@ -444,13 +444,13 @@ func TestIdentifierWithTerminal(t *testing.T) {
 	changed := id.WithTerminal(true)
 
 	// Original unchanged
-	if id.Terminal() != false {
-		t.Errorf("original Terminal() = %v, want false", id.Terminal())
+	if id.IsTerminal() != false {
+		t.Errorf("original IsTerminal() = %v, want false", id.IsTerminal())
 	}
 
 	// New has new terminal
-	if changed.Terminal() != true {
-		t.Errorf("changed Terminal() = %v, want true", changed.Terminal())
+	if changed.IsTerminal() != true {
+		t.Errorf("changed IsTerminal() = %v, want true", changed.IsTerminal())
 	}
 }
 
@@ -554,16 +554,16 @@ func TestIdentifierIsSecondPlayer(t *testing.T) {
 // Comparison Query Tests
 // ============================================================================
 
-func TestIdentifierSameType(t *testing.T) {
+func TestIdentifierSameAbbr(t *testing.T) {
 	id1 := NewIdentifier('K', First)
 	id2 := NewIdentifier('K', Second)
 	id3 := NewIdentifier('Q', First)
 
-	if !id1.SameType(id2) {
-		t.Error("SameType(K, K) = false, want true")
+	if !id1.SameAbbr(id2) {
+		t.Error("SameAbbr(K, K) = false, want true")
 	}
-	if id1.SameType(id3) {
-		t.Error("SameType(K, Q) = true, want false")
+	if id1.SameAbbr(id3) {
+		t.Error("SameAbbr(K, Q) = true, want false")
 	}
 }
 
@@ -647,7 +647,7 @@ func TestIdentifierEquality(t *testing.T) {
 func TestIdentifierChaining(t *testing.T) {
 	id := NewIdentifier('K', First).
 		Enhance().
-		MarkTerminal().
+		Terminal().
 		Flip()
 
 	want := "+k^"

@@ -123,16 +123,16 @@ func TestIsValidState(t *testing.T) {
 	}
 }
 
-func TestIsValidType(t *testing.T) {
-	// Valid types: A-Z
+func TestIsValidAbbr(t *testing.T) {
+	// Valid abbrs: A-Z
 	for r := 'A'; r <= 'Z'; r++ {
-		if !isValidType(r) {
-			t.Errorf("isValidType(%q) = false, want true", r)
+		if !isValidAbbr(r) {
+			t.Errorf("isValidAbbr(%q) = false, want true", r)
 		}
 	}
 
-	// Invalid types
-	invalidTypes := []rune{
+	// Invalid abbrs
+	invalidAbbrs := []rune{
 		'a', 'z', // lowercase
 		'0', '9', // digits
 		'+', '-', '^', // modifiers
@@ -141,9 +141,9 @@ func TestIsValidType(t *testing.T) {
 		0, 127, // control characters
 	}
 
-	for _, r := range invalidTypes {
-		if isValidType(r) {
-			t.Errorf("isValidType(%q) = true, want false", r)
+	for _, r := range invalidAbbrs {
+		if isValidAbbr(r) {
+			t.Errorf("isValidAbbr(%q) = true, want false", r)
 		}
 	}
 }

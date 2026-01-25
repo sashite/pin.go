@@ -6,7 +6,7 @@
 // See https://sashite.dev/specs/pin/1.0.0/ for the specification.
 package pin
 
-// Side represents the player side (First or Second).
+// Side represents the piece side (First or Second).
 type Side uint8
 
 const (
@@ -77,7 +77,7 @@ func isValidState(s State) bool {
 	return s == Normal || s == Enhanced || s == Diminished
 }
 
-// isValidType reports whether r is a valid piece type (A-Z).
-func isValidType(r rune) bool {
+// isValidAbbr reports whether r is a valid piece name abbreviation (A-Z).
+func isValidAbbr(r rune) bool {
 	return r >= 'A' && r <= 'Z'
 }

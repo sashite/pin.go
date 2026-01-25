@@ -3,8 +3,8 @@ package pin
 // Identifier represents a parsed PIN (Piece Identifier Notation) identifier.
 //
 // An Identifier encodes four attributes of a piece:
-//   - Type: the piece type (A-Z as uppercase rune)
-//   - Side: the player side (First or Second)
+//   - Abbr: the piece name abbreviation (A-Z as uppercase rune)
+//   - Side: the piece side (First or Second)
 //   - State: the piece state (Normal, Enhanced, or Diminished)
 //   - Terminal: whether the piece is terminal (true or false)
 //
@@ -14,7 +14,7 @@ package pin
 // The zero value is not valid; use NewIdentifier, NewIdentifierWithOptions,
 // or Parse to create valid instances.
 type Identifier struct {
-	typ      rune
+	abbr     rune
 	side     Side
 	state    State
 	terminal bool
@@ -24,31 +24,31 @@ type Identifier struct {
 // Constructors
 // ============================================================================
 
-// NewIdentifier creates a new Identifier with the given type and side.
+// NewIdentifier creates a new Identifier with the given abbreviation and side.
 // State defaults to Normal and terminal defaults to false.
 //
-// The type must be an uppercase letter (A-Z). If a lowercase letter is provided,
+// The abbreviation must be an uppercase letter (A-Z). If a lowercase letter is provided,
 // it will be converted to uppercase.
 //
-// Panics if the type is not a letter A-Z (case-insensitive) or if the side is invalid.
-func NewIdentifier(typ rune, side Side) Identifier {
-	return NewIdentifierWithOptions(typ, side, Normal, false)
+// Panics if the abbreviation is not a letter A-Z (case-insensitive) or if the side is invalid.
+func NewIdentifier(abbr rune, side Side) Identifier {
+	return NewIdentifierWithOptions(abbr, side, Normal, false)
 }
 
 // NewIdentifierWithOptions creates a new Identifier with all attributes specified.
 //
-// The type must be an uppercase letter (A-Z). If a lowercase letter is provided,
+// The abbreviation must be an uppercase letter (A-Z). If a lowercase letter is provided,
 // it will be converted to uppercase.
 //
 // Panics if any attribute is invalid.
-func NewIdentifierWithOptions(typ rune, side Side, state State, terminal bool) Identifier {
+func NewIdentifierWithOptions(abbr rune, side Side, state State, terminal bool) Identifier {
 	// Normalize to uppercase
-	if typ >= 'a' && typ <= 'z' {
-		typ = typ - 'a' + 'A'
+	if abbr >= 'a' && abbr <= 'z' {
+		abbr = abbr - 'a' + 'A'
 	}
 
-	if !isValidType(typ) {
-		panic(ErrInvalidType)
+	if !isValidAbbr(abbr) {
+		panic(ErrInvalidAbbr)
 	}
 	if !isValidSide(side) {
 		panic(ErrInvalidSide)
@@ -58,7 +58,7 @@ func NewIdentifierWithOptions(typ rune, side Side, state State, terminal bool) I
 	}
 
 	return Identifier{
-		typ:      typ,
+		abbr:     abbr,
 		side:     side,
 		state:    state,
 		terminal: terminal,
@@ -69,12 +69,12 @@ func NewIdentifierWithOptions(typ rune, side Side, state State, terminal bool) I
 // Accessors
 // ============================================================================
 
-// Type returns the piece type as an uppercase rune (A-Z).
-func (id Identifier) Type() rune {
-	return id.typ
+// Abbr returns the piece name abbreviation as an uppercase rune (A-Z).
+func (id Identifier) Abbr() rune {
+	return id.abbr
 }
 
-// Side returns the player side.
+// Side returns the piece side.
 func (id Identifier) Side() Side {
 	return id.side
 }
@@ -84,8 +84,8 @@ func (id Identifier) State() State {
 	return id.state
 }
 
-// Terminal returns the terminal status.
-func (id Identifier) Terminal() bool {
+// IsTerminal returns the terminal status.
+func (id Identifier) IsTerminal() bool {
 	return id.terminal
 }
 
@@ -130,7 +130,7 @@ func (id Identifier) AppendTo(dst []byte) []byte {
 // Letter returns the letter component of the PIN.
 // Returns uppercase for First player, lowercase for Second player.
 func (id Identifier) Letter() string {
-	r := id.typ
+	r := id.abbr
 	if id.side == Second {
 		r = r - 'A' + 'a'
 	}
@@ -200,14 +200,14 @@ func (id Identifier) Flip() Identifier {
 // Terminal Transformations
 // ============================================================================
 
-// MarkTerminal returns a new Identifier marked as terminal.
-func (id Identifier) MarkTerminal() Identifier {
+// Terminal returns a new Identifier marked as terminal.
+func (id Identifier) Terminal() Identifier {
 	id.terminal = true
 	return id
 }
 
-// UnmarkTerminal returns a new Identifier unmarked as terminal.
-func (id Identifier) UnmarkTerminal() Identifier {
+// NonTerminal returns a new Identifier unmarked as terminal.
+func (id Identifier) NonTerminal() Identifier {
 	id.terminal = false
 	return id
 }
@@ -216,22 +216,22 @@ func (id Identifier) UnmarkTerminal() Identifier {
 // Attribute Transformations
 // ============================================================================
 
-// WithType returns a new Identifier with the specified type.
-// The type must be an uppercase letter (A-Z). If a lowercase letter is provided,
+// WithAbbr returns a new Identifier with the specified abbreviation.
+// The abbreviation must be an uppercase letter (A-Z). If a lowercase letter is provided,
 // it will be converted to uppercase.
 //
-// Panics if the type is not a letter A-Z (case-insensitive).
-func (id Identifier) WithType(typ rune) Identifier {
+// Panics if the abbreviation is not a letter A-Z (case-insensitive).
+func (id Identifier) WithAbbr(abbr rune) Identifier {
 	// Normalize to uppercase
-	if typ >= 'a' && typ <= 'z' {
-		typ = typ - 'a' + 'A'
+	if abbr >= 'a' && abbr <= 'z' {
+		abbr = abbr - 'a' + 'A'
 	}
 
-	if !isValidType(typ) {
-		panic(ErrInvalidType)
+	if !isValidAbbr(abbr) {
+		panic(ErrInvalidAbbr)
 	}
 
-	id.typ = typ
+	id.abbr = abbr
 	return id
 }
 
@@ -302,9 +302,9 @@ func (id Identifier) IsSecondPlayer() bool {
 // Comparison Queries
 // ============================================================================
 
-// SameType reports whether two Identifiers have the same type.
-func (id Identifier) SameType(other Identifier) bool {
-	return id.typ == other.typ
+// SameAbbr reports whether two Identifiers have the same abbreviation.
+func (id Identifier) SameAbbr(other Identifier) bool {
+	return id.abbr == other.abbr
 }
 
 // SameSide reports whether two Identifiers have the same side.

@@ -15,8 +15,8 @@ func TestParseUppercaseLetter(t *testing.T) {
 		t.Fatalf("Parse(\"K\") error = %v", err)
 	}
 
-	if id.Type() != 'K' {
-		t.Errorf("Type() = %q, want 'K'", id.Type())
+	if id.Abbr() != 'K' {
+		t.Errorf("Abbr() = %q, want 'K'", id.Abbr())
 	}
 	if id.Side() != First {
 		t.Errorf("Side() = %v, want First", id.Side())
@@ -24,8 +24,8 @@ func TestParseUppercaseLetter(t *testing.T) {
 	if id.State() != Normal {
 		t.Errorf("State() = %v, want Normal", id.State())
 	}
-	if id.Terminal() != false {
-		t.Errorf("Terminal() = %v, want false", id.Terminal())
+	if id.IsTerminal() != false {
+		t.Errorf("IsTerminal() = %v, want false", id.IsTerminal())
 	}
 }
 
@@ -35,8 +35,8 @@ func TestParseLowercaseLetter(t *testing.T) {
 		t.Fatalf("Parse(\"k\") error = %v", err)
 	}
 
-	if id.Type() != 'K' {
-		t.Errorf("Type() = %q, want 'K' (normalized)", id.Type())
+	if id.Abbr() != 'K' {
+		t.Errorf("Abbr() = %q, want 'K' (normalized)", id.Abbr())
 	}
 	if id.Side() != Second {
 		t.Errorf("Side() = %v, want Second", id.Side())
@@ -51,8 +51,8 @@ func TestParseAllUppercaseLetters(t *testing.T) {
 			t.Errorf("Parse(%q) error = %v", input, err)
 			continue
 		}
-		if id.Type() != r {
-			t.Errorf("Parse(%q).Type() = %q, want %q", input, id.Type(), r)
+		if id.Abbr() != r {
+			t.Errorf("Parse(%q).Abbr() = %q, want %q", input, id.Abbr(), r)
 		}
 		if id.Side() != First {
 			t.Errorf("Parse(%q).Side() = %v, want First", input, id.Side())
@@ -68,9 +68,9 @@ func TestParseAllLowercaseLetters(t *testing.T) {
 			t.Errorf("Parse(%q) error = %v", input, err)
 			continue
 		}
-		expectedType := r - 'a' + 'A'
-		if id.Type() != expectedType {
-			t.Errorf("Parse(%q).Type() = %q, want %q", input, id.Type(), expectedType)
+		expectedAbbr := r - 'a' + 'A'
+		if id.Abbr() != expectedAbbr {
+			t.Errorf("Parse(%q).Abbr() = %q, want %q", input, id.Abbr(), expectedAbbr)
 		}
 		if id.Side() != Second {
 			t.Errorf("Parse(%q).Side() = %v, want Second", input, id.Side())
@@ -88,8 +88,8 @@ func TestParseEnhancedUppercase(t *testing.T) {
 		t.Fatalf("Parse(\"+R\") error = %v", err)
 	}
 
-	if id.Type() != 'R' {
-		t.Errorf("Type() = %q, want 'R'", id.Type())
+	if id.Abbr() != 'R' {
+		t.Errorf("Abbr() = %q, want 'R'", id.Abbr())
 	}
 	if id.Side() != First {
 		t.Errorf("Side() = %v, want First", id.Side())
@@ -97,8 +97,8 @@ func TestParseEnhancedUppercase(t *testing.T) {
 	if id.State() != Enhanced {
 		t.Errorf("State() = %v, want Enhanced", id.State())
 	}
-	if id.Terminal() != false {
-		t.Errorf("Terminal() = %v, want false", id.Terminal())
+	if id.IsTerminal() != false {
+		t.Errorf("IsTerminal() = %v, want false", id.IsTerminal())
 	}
 }
 
@@ -122,8 +122,8 @@ func TestParseDiminishedUppercase(t *testing.T) {
 		t.Fatalf("Parse(\"-P\") error = %v", err)
 	}
 
-	if id.Type() != 'P' {
-		t.Errorf("Type() = %q, want 'P'", id.Type())
+	if id.Abbr() != 'P' {
+		t.Errorf("Abbr() = %q, want 'P'", id.Abbr())
 	}
 	if id.State() != Diminished {
 		t.Errorf("State() = %v, want Diminished", id.State())
@@ -154,8 +154,8 @@ func TestParseTerminalUppercase(t *testing.T) {
 		t.Fatalf("Parse(\"K^\") error = %v", err)
 	}
 
-	if id.Type() != 'K' {
-		t.Errorf("Type() = %q, want 'K'", id.Type())
+	if id.Abbr() != 'K' {
+		t.Errorf("Abbr() = %q, want 'K'", id.Abbr())
 	}
 	if id.Side() != First {
 		t.Errorf("Side() = %v, want First", id.Side())
@@ -163,8 +163,8 @@ func TestParseTerminalUppercase(t *testing.T) {
 	if id.State() != Normal {
 		t.Errorf("State() = %v, want Normal", id.State())
 	}
-	if id.Terminal() != true {
-		t.Errorf("Terminal() = %v, want true", id.Terminal())
+	if id.IsTerminal() != true {
+		t.Errorf("IsTerminal() = %v, want true", id.IsTerminal())
 	}
 }
 
@@ -177,8 +177,8 @@ func TestParseTerminalLowercase(t *testing.T) {
 	if id.Side() != Second {
 		t.Errorf("Side() = %v, want Second", id.Side())
 	}
-	if id.Terminal() != true {
-		t.Errorf("Terminal() = %v, want true", id.Terminal())
+	if id.IsTerminal() != true {
+		t.Errorf("IsTerminal() = %v, want true", id.IsTerminal())
 	}
 }
 
@@ -192,8 +192,8 @@ func TestParseEnhancedTerminal(t *testing.T) {
 		t.Fatalf("Parse(\"+K^\") error = %v", err)
 	}
 
-	if id.Type() != 'K' {
-		t.Errorf("Type() = %q, want 'K'", id.Type())
+	if id.Abbr() != 'K' {
+		t.Errorf("Abbr() = %q, want 'K'", id.Abbr())
 	}
 	if id.Side() != First {
 		t.Errorf("Side() = %v, want First", id.Side())
@@ -201,8 +201,8 @@ func TestParseEnhancedTerminal(t *testing.T) {
 	if id.State() != Enhanced {
 		t.Errorf("State() = %v, want Enhanced", id.State())
 	}
-	if id.Terminal() != true {
-		t.Errorf("Terminal() = %v, want true", id.Terminal())
+	if id.IsTerminal() != true {
+		t.Errorf("IsTerminal() = %v, want true", id.IsTerminal())
 	}
 }
 
@@ -212,8 +212,8 @@ func TestParseDiminishedTerminal(t *testing.T) {
 		t.Fatalf("Parse(\"-k^\") error = %v", err)
 	}
 
-	if id.Type() != 'K' {
-		t.Errorf("Type() = %q, want 'K'", id.Type())
+	if id.Abbr() != 'K' {
+		t.Errorf("Abbr() = %q, want 'K'", id.Abbr())
 	}
 	if id.Side() != Second {
 		t.Errorf("Side() = %v, want Second", id.Side())
@@ -221,8 +221,8 @@ func TestParseDiminishedTerminal(t *testing.T) {
 	if id.State() != Diminished {
 		t.Errorf("State() = %v, want Diminished", id.State())
 	}
-	if id.Terminal() != true {
-		t.Errorf("Terminal() = %v, want true", id.Terminal())
+	if id.IsTerminal() != true {
+		t.Errorf("IsTerminal() = %v, want true", id.IsTerminal())
 	}
 }
 
@@ -233,14 +233,14 @@ func TestParseDiminishedTerminal(t *testing.T) {
 func TestMustParseValid(t *testing.T) {
 	id := MustParse("+K^")
 
-	if id.Type() != 'K' {
-		t.Errorf("Type() = %q, want 'K'", id.Type())
+	if id.Abbr() != 'K' {
+		t.Errorf("Abbr() = %q, want 'K'", id.Abbr())
 	}
 	if id.State() != Enhanced {
 		t.Errorf("State() = %v, want Enhanced", id.State())
 	}
-	if id.Terminal() != true {
-		t.Errorf("Terminal() = %v, want true", id.Terminal())
+	if id.IsTerminal() != true {
+		t.Errorf("IsTerminal() = %v, want true", id.IsTerminal())
 	}
 }
 

@@ -13,7 +13,7 @@ This library implements the [PIN Specification v1.0.0](https://sashite.dev/specs
 ## Installation
 
 ```bash
-go get github.com/sashite/pin.go/v2
+go get github.com/sashite/pin.go/v3
 ```
 
 ## Usage
@@ -27,7 +27,7 @@ package main
 
 import (
 	"fmt"
-	"github.com/sashite/pin.go/v2"
+	"github.com/sashite/pin.go/v3"
 )
 
 func main() {
@@ -36,10 +36,10 @@ func main() {
 	if err != nil {
 		panic(err)
 	}
-	fmt.Println(id.Type())     // K
+	fmt.Println(id.Abbr())     // K
 	fmt.Println(id.Side())     // First
 	fmt.Println(id.State())    // Normal
-	fmt.Println(id.Terminal()) // false
+	fmt.Println(id.IsTerminal()) // false
 
 	// With state modifier
 	id, _ = pin.Parse("+R")
@@ -47,7 +47,7 @@ func main() {
 
 	// With terminal marker
 	id, _ = pin.Parse("K^")
-	fmt.Println(id.Terminal()) // true
+	fmt.Println(id.IsTerminal()) // true
 
 	// Panic on error (for constants or trusted input)
 	k := pin.MustParse("+K^")
@@ -86,23 +86,6 @@ if err := pin.Validate("+K^"); err != nil {
 }
 ```
 
-### Accessing Identifier Data
-
-```go
-id := pin.MustParse("+K^")
-
-// Get attributes
-fmt.Println(id.Type())     // K (rune)
-fmt.Println(id.Side())     // First
-fmt.Println(id.State())    // Enhanced
-fmt.Println(id.Terminal()) // true
-
-// Get string components
-fmt.Println(id.Letter()) // "K"
-fmt.Println(id.Prefix()) // "+"
-fmt.Println(id.Suffix()) // "^"
-```
-
 ### Transformations
 
 All transformations return new immutable values.
@@ -119,11 +102,11 @@ fmt.Println(id.Normalize().String()) // "K"
 fmt.Println(id.Flip().String()) // "k"
 
 // Terminal transformations
-fmt.Println(id.MarkTerminal().String())   // "K^"
-fmt.Println(id.UnmarkTerminal().String()) // "K"
+fmt.Println(id.Terminal().String())    // "K^"
+fmt.Println(id.NonTerminal().String()) // "K"
 
 // Attribute changes
-fmt.Println(id.WithType('Q').String())           // "Q"
+fmt.Println(id.WithAbbr('Q').String())           // "Q"
 fmt.Println(id.WithSide(pin.Second).String())    // "k"
 fmt.Println(id.WithState(pin.Enhanced).String()) // "+K"
 fmt.Println(id.WithTerminal(true).String())      // "K^"
@@ -144,11 +127,11 @@ fmt.Println(id.IsFirstPlayer())  // true
 fmt.Println(id.IsSecondPlayer()) // false
 
 // Terminal query
-fmt.Println(id.Terminal()) // true
+fmt.Println(id.IsTerminal()) // true
 
 // Comparison queries
 other := pin.MustParse("k")
-fmt.Println(id.SameType(other))     // true
+fmt.Println(id.SameAbbr(other))     // true
 fmt.Println(id.SameSide(other))     // false
 fmt.Println(id.SameState(other))    // false
 fmt.Println(id.SameTerminal(other)) // false
@@ -176,29 +159,29 @@ type Identifier struct {
 	// contains unexported fields
 }
 
-// Side represents the player side.
+// Side represents the piece side.
 type Side uint8
 
 // State represents the piece state.
 type State uint8
 
 // NewIdentifier creates an Identifier with default state (Normal) and terminal (false).
-func NewIdentifier(typ rune, side Side) Identifier
+func NewIdentifier(abbr rune, side Side) Identifier
 
 // NewIdentifierWithOptions creates an Identifier with all attributes specified.
-func NewIdentifierWithOptions(typ rune, side Side, state State, terminal bool) Identifier
+func NewIdentifierWithOptions(abbr rune, side Side, state State, terminal bool) Identifier
 
-// Type returns the piece type as uppercase rune (A-Z).
-func (id Identifier) Type() rune
+// Abbr returns the piece name abbreviation as uppercase rune (A-Z).
+func (id Identifier) Abbr() rune
 
-// Side returns the player side.
+// Side returns the piece side.
 func (id Identifier) Side() Side
 
 // State returns the piece state.
 func (id Identifier) State() State
 
-// Terminal returns the terminal status.
-func (id Identifier) Terminal() bool
+// IsTerminal returns the terminal status.
+func (id Identifier) IsTerminal() bool
 
 // String returns the PIN string representation.
 func (id Identifier) String() string
@@ -259,11 +242,11 @@ func (id Identifier) Normalize() Identifier
 func (id Identifier) Flip() Identifier
 
 // Terminal transformations
-func (id Identifier) MarkTerminal() Identifier
-func (id Identifier) UnmarkTerminal() Identifier
+func (id Identifier) Terminal() Identifier
+func (id Identifier) NonTerminal() Identifier
 
 // Attribute changes
-func (id Identifier) WithType(typ rune) Identifier
+func (id Identifier) WithAbbr(abbr rune) Identifier
 func (id Identifier) WithSide(side Side) Identifier
 func (id Identifier) WithState(state State) Identifier
 func (id Identifier) WithTerminal(terminal bool) Identifier
@@ -282,7 +265,7 @@ func (id Identifier) IsFirstPlayer() bool
 func (id Identifier) IsSecondPlayer() bool
 
 // Comparison queries
-func (id Identifier) SameType(other Identifier) bool
+func (id Identifier) SameAbbr(other Identifier) bool
 func (id Identifier) SameSide(other Identifier) bool
 func (id Identifier) SameState(other Identifier) bool
 func (id Identifier) SameTerminal(other Identifier) bool
@@ -292,10 +275,10 @@ func (id Identifier) SameTerminal(other Identifier) bool
 
 ```go
 var (
-	ErrEmptyInput           = errors.New("pin: empty input")
-	ErrInputTooLong         = errors.New("pin: input exceeds 3 characters")
-	ErrMustContainOneLetter = errors.New("pin: must contain exactly one letter")
-	ErrInvalidStateModifier = errors.New("pin: invalid state modifier")
+	ErrEmptyInput            = errors.New("pin: empty input")
+	ErrInputTooLong          = errors.New("pin: input exceeds 3 characters")
+	ErrMustContainOneLetter  = errors.New("pin: must contain exactly one letter")
+	ErrInvalidStateModifier  = errors.New("pin: invalid state modifier")
 	ErrInvalidTerminalMarker = errors.New("pin: invalid terminal marker")
 )
 ```

@@ -46,13 +46,13 @@ func Parse(s string) (Identifier, error) {
 
 // parseLength1 handles single-byte input (letter only).
 func parseLength1(b byte) (Identifier, error) {
-	typ, side, ok := classifyLetter(b)
+	abbr, side, ok := classifyLetter(b)
 	if !ok {
 		return Identifier{}, ErrMustContainOneLetter
 	}
 
 	return Identifier{
-		typ:      typ,
+		abbr:     abbr,
 		side:     side,
 		state:    Normal,
 		terminal: false,
@@ -63,12 +63,12 @@ func parseLength1(b byte) (Identifier, error) {
 func parseLength2(first, second byte) (Identifier, error) {
 	// Try: modifier + letter
 	if state, ok := classifyModifier(first); ok {
-		typ, side, ok := classifyLetter(second)
+		abbr, side, ok := classifyLetter(second)
 		if !ok {
 			return Identifier{}, ErrMustContainOneLetter
 		}
 		return Identifier{
-			typ:      typ,
+			abbr:     abbr,
 			side:     side,
 			state:    state,
 			terminal: false,
@@ -76,21 +76,21 @@ func parseLength2(first, second byte) (Identifier, error) {
 	}
 
 	// Try: letter + terminal
-	typ, side, ok := classifyLetter(first)
+	abbr, side, ok := classifyLetter(first)
 	if !ok {
 		// First byte is not a letter and not a modifier
-		if isTerminal(first) {
+		if isTerminalMarker(first) {
 			return Identifier{}, ErrInvalidStateModifier
 		}
 		return Identifier{}, ErrInvalidStateModifier
 	}
 
-	if !isTerminal(second) {
+	if !isTerminalMarker(second) {
 		return Identifier{}, ErrInvalidTerminalMarker
 	}
 
 	return Identifier{
-		typ:      typ,
+		abbr:     abbr,
 		side:     side,
 		state:    Normal,
 		terminal: true,
@@ -109,17 +109,17 @@ func parseLength3(first, second, third byte) (Identifier, error) {
 		return Identifier{}, ErrInvalidStateModifier
 	}
 
-	typ, side, ok := classifyLetter(second)
+	abbr, side, ok := classifyLetter(second)
 	if !ok {
 		return Identifier{}, ErrMustContainOneLetter
 	}
 
-	if !isTerminal(third) {
+	if !isTerminalMarker(third) {
 		return Identifier{}, ErrInvalidTerminalMarker
 	}
 
 	return Identifier{
-		typ:      typ,
+		abbr:     abbr,
 		side:     side,
 		state:    state,
 		terminal: true,
@@ -127,7 +127,7 @@ func parseLength3(first, second, third byte) (Identifier, error) {
 }
 
 // classifyLetter checks if a byte is a valid ASCII letter.
-// Returns the uppercase type, side, and whether it's valid.
+// Returns the uppercase abbreviation, side, and whether it's valid.
 func classifyLetter(b byte) (rune, Side, bool) {
 	switch {
 	case b >= 'A' && b <= 'Z':
@@ -152,8 +152,8 @@ func classifyModifier(b byte) (State, bool) {
 	}
 }
 
-// isTerminal checks if a byte is the terminal marker.
-func isTerminal(b byte) bool {
+// isTerminalMarker checks if a byte is the terminal marker.
+func isTerminalMarker(b byte) bool {
 	return b == '^'
 }
 
